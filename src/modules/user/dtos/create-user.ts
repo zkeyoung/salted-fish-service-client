@@ -1,4 +1,4 @@
-import { IsString, Length } from 'class-validator';
+import { IsString, Length, IsOptional } from 'class-validator';
 
 export default class CreateUserDto {
   @IsString()
@@ -10,14 +10,6 @@ export default class CreateUserDto {
   password: string;
 
   @IsString()
-  @Length(4, 4)
-  captchaCode: string;
-
-  @IsString()
   @Length(6, 6)
   inviteCode: string;
-
-  @IsString()
-  @Length(1, 100)
-  wechatOpenId: string;
 }

@@ -22,6 +22,7 @@ import SessionModule from './modules/session';
 import MessageModule from './modules/message';
 import JwtAuthGuard from './guard/jwt-auth';
 import GatewayModule from './modules/gateway';
+import ConcernModule from './modules/concern';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import GatewayModule from './modules/gateway';
     SessionModule,
     MessageModule,
     GatewayModule,
+    ConcernModule,
   ],
   controllers: [AppController],
   providers: [

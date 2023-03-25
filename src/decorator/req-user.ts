@@ -9,4 +9,4 @@ export const ReqUser = createParamDecorator<string>(
   },
 );
 
-export type ReqUser = Pick<User, 'id' | 'roles' | 'wechatOpenId'>;
+export type ReqUser = Pick<User, 'id' | 'roles'>;

@@ -34,14 +34,14 @@ export default class AuthService {
   ) {}
 
   async getSvgCaptcha(
-    wechatOpenId: string,
+    deviceId: string,
   ): Promise<{ text?: string; captcha: string }> {
     const { text, data: captcha } = SvgCaptcha.create({
       noise: 3,
       background: '#f0f0f0',
     });
     await this.cacheManager.set(
-      `${CacheType.GET_SVG_CAPTCHA}:${wechatOpenId}`,
+      `${CacheType.GET_SVG_CAPTCHA}:${deviceId}`,
       text,
       { ttl: this.ttl.GET_SVG_CAPTCHA },
     );
@@ -51,13 +51,13 @@ export default class AuthService {
     };
   }
 
-  async checkCaptcha(wechatOpenId, captcha) {
-    const cacheText = await this.cacheManager.get(
-      `${CacheType.GET_SVG_CAPTCHA}:${wechatOpenId}`,
+  async checkCaptcha(deviceId, captcha: string) {
+    const cacheText: string = await this.cacheManager.get(
+      `${CacheType.GET_SVG_CAPTCHA}:${deviceId}`,
     );
-    await this.cacheManager.del(`${CacheType.GET_SVG_CAPTCHA}:${wechatOpenId}`);
+    await this.cacheManager.del(`${CacheType.GET_SVG_CAPTCHA}:${deviceId}`);
     if (!cacheText) return false;
-    return cacheText === captcha;
+    return cacheText.toLocaleLowerCase() === captcha.toLocaleLowerCase();
   }
 
   async validateUser(loginUserDto: LoginUserDto) {
@@ -68,27 +68,14 @@ export default class AuthService {
     const payload = {
       id: user.id,
       roles: user.roles,
-      wechatOpenId: user.wechatOpenId,
     };
     const accessToken = await this.jwtSignPayload(payload);
-    this.cacheManager.set(
-      `${CacheType.REFRESH_TOKEN}:${user.wechatOpenId}`,
-      payload,
-      { ttl: this.token.REFRESH_TOKEN_EXPIRE },
-    );
-    const refreshTokenBuffer = this.cryptoService.aesEncode(
-      Buffer.from(user.wechatOpenId),
-      this.token.REFRESH_TOKEN_SECRET,
-    );
-    return { accessToken, refreshToken: refreshTokenBuffer.toString('hex') };
+    return { accessToken };
   }
 
   async postAuthUser(createUserDto: CreateUserDto) {
-    const isPass = await this.checkCaptcha(
-      createUserDto.wechatOpenId,
-      createUserDto.captchaCode,
-    );
-    if (!isPass) throw new SaltedException(ErrCodes.CAPTCHA_ERROR);
+    if (createUserDto.inviteCode !== '666666')
+      throw new SaltedException(ErrCodes.INVITE_CODE_ERROR);
     return await this.userService.createOneUser(createUserDto);
   }
 
@@ -101,18 +88,16 @@ export default class AuthService {
     return await this.jwtService.signAsync({ encrypt: payloadEncrypt });
   }
 
-  async refreshToken(reqUser: ReqUser, refreshTokenEncrypt: string) {
+  async refreshToken(refreshTokenEncrypt: string) {
     const refreshTokenBuffer = this.cryptoService.aesDecode(
       Buffer.from(refreshTokenEncrypt, 'hex'),
       this.token.REFRESH_TOKEN_SECRET,
     );
     const refreshToken = refreshTokenBuffer.toString('utf8');
-    if (reqUser.wechatOpenId !== refreshToken) throw new BadRequestException();
-    const payload = await this.cacheManager.get<object>(
-      `${CacheType.REFRESH_TOKEN}:${reqUser.wechatOpenId}`,
-    );
-    if (!payload) throw new SaltedException(ErrCodes.LOGIN_EXPIRED);
-    const accessToken = await this.jwtSignPayload(payload);
-    return { accessToken };
+    return { accessToken: refreshToken };
+  }
+
+  async logout(reqUser: ReqUser, refreshTokenEncrypt: string) {
+    return;
   }
 }

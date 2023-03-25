@@ -45,7 +45,7 @@ export default class UserService {
     const { password, username } = loginUserDto;
     const user = await this.userRepository.findOne(
       { username },
-      { fields: ['salt', 'password', 'wechatOpenId', 'roles'] },
+      { fields: ['salt', 'password', 'roles'] },
     );
     if (!user) throw new SaltedException(ErrCodes.USER_PWD_ERROR);
     const hashPwd = await this.cryptoService.hashPwd(password, user.salt);
@@ -56,7 +56,7 @@ export default class UserService {
 
   async getMyProfile(reqUser: ReqUser) {
     const user = await this.userRepository.findOne(reqUser.id, {
-      fields: ['nickname', 'avatar', 'wechatOpenId', 'roles', 'auditProfile'],
+      fields: ['nickname', 'avatar', 'roles', 'auditProfile'],
     });
     return user;
   }

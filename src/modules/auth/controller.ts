@@ -1,4 +1,12 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { Public } from '../../decorator/public';
 import { ReqUser } from '../../decorator/req-user';
 import LocalAuthGuard from '../../guard/local-auth';
@@ -14,7 +22,15 @@ export default class AuthController {
   @Public()
   @Post('captcha')
   postAuthCaptcha(@Body() postAuthCaptchaDto: PostAuthCaptchaDto) {
-    return this.authService.getSvgCaptcha(postAuthCaptchaDto.wechatOpenId);
+    return this.authService.getSvgCaptcha(postAuthCaptchaDto.deviceId);
+  }
+
+  @Delete('token/:refreshToken')
+  async logout(
+    @ReqUser() user: ReqUser,
+    @Param() { refreshToken }: RefreshTokenDto,
+  ) {
+    return this.authService.logout(user, refreshToken);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -30,11 +46,9 @@ export default class AuthController {
     return this.authService.postAuthUser(createUserDto);
   }
 
-  @Post('token/refresh')
-  postAuthTokenRefresh(
-    @ReqUser() reqUser: ReqUser,
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ) {
-    return this.authService.refreshToken(reqUser, refreshTokenDto.refreshToken);
+  @Public()
+  @Patch('token/:refreshToken')
+  postAuthTokenRefresh(@Param() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 }

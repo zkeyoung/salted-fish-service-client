@@ -24,7 +24,7 @@ export default class LocalStrategy extends PassportStrategy(Strategy) {
       throw new BadRequestException();
     }
     const isPass = await this.authService.checkCaptcha(
-      loginUserDto.wechatOpenId,
+      loginUserDto.deviceId,
       loginUserDto.captchaCode,
     );
     if (!isPass) throw new SaltedException(ErrCodes.CAPTCHA_ERROR);

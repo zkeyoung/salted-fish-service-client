@@ -25,6 +25,7 @@ type UserSocket = Socket & { user: ReqUser };
 @UsePipes(
   new ValidationPipe({
     disableErrorMessages: process.env.NODE_ENV === Environment.PRODUCTION,
+    whitelist: true,
     transform: true,
     transformOptions: {
       enableImplicitConversion: true,
@@ -33,8 +34,9 @@ type UserSocket = Socket & { user: ReqUser };
 )
 @UseFilters(CatchUnhandleWsException)
 @WebSocketGateway({
+  path: '/ws/v1/socket.io',
   cors: {
-    origin: 'null',
+    origin: '*',
   },
 })
 export default class WsGatewayController
@@ -72,6 +74,8 @@ export default class WsGatewayController
       postMessageDto,
     );
     const receiver = message.receiver;
-    client.to(receiver.id).emit('message', postMessageDto.content);
+    client
+      .to(receiver.id)
+      .emit('message', { id: message.id, content: postMessageDto.content });
   }
 }

@@ -24,9 +24,6 @@ export default class User extends BaseEntity {
   @Property({ hidden: true })
   salt: string;
 
-  @Property({ hidden: true, nullable: true })
-  wechatOpenId?: string;
-
   @Enum(() => UserRole)
   roles: UserRole = UserRole.MEMBER;
 

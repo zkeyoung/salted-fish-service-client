@@ -21,7 +21,6 @@ const user = {
 const reqUser: ReqUser = {
   id: user.id,
   roles: user.roles,
-  wechatOpenId: 'test',
 };
 
 beforeAll(async () => {

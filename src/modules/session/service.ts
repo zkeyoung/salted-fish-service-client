@@ -60,10 +60,12 @@ export default class SessionService {
       },
     );
     return sessions.map((session) => {
-      session.lastMessage.content = this.cryptoService.aesDecodeString(
-        session.lastMessage.content,
-        this.userConfig.MESSAGE_SECRET,
-      );
+      if (session.lastMessage) {
+        session.lastMessage.content = this.cryptoService.aesDecodeString(
+          session.lastMessage.content,
+          this.userConfig.MESSAGE_SECRET,
+        );
+      }
       return session;
     });
   }

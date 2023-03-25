@@ -4,9 +4,11 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
 import { GoodAuditStatus } from '../../common/enums/good';
 import type { ReqUser } from '../../decorator/req-user';
+import Concern from '../orm/entities/concern';
 import Good from '../orm/entities/good';
 import User from '../orm/entities/user';
 import CreateGoodDto from './dto/create-good';
+import PatchGoodsDto from './dto/patch-goods';
 import QueryGoodsDto from './dto/query-goods';
 
 @Injectable()
@@ -16,6 +18,8 @@ export default class GoodService {
     private readonly goodRepository: EntityRepository<Good>,
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
+    @InjectRepository(Concern)
+    private readonly concernRepository: EntityRepository<Concern>,
   ) {}
 
   async publishOneGood(reqUser: ReqUser, createGoodDto: CreateGoodDto) {
@@ -77,11 +81,16 @@ export default class GoodService {
     );
   }
 
-  getOneGood(id: string) {
-    return this.goodRepository.findOne(id, {
+  async getOneGood(
+    reqUser: ReqUser,
+    id: string,
+  ): Promise<Good & { concerned: boolean }> {
+    const goodInfo = await this.goodRepository.findOneOrFail(id, {
       fields: [
         'category',
+        'auditStatus',
         'createdAt',
+        'isOnShelf',
         'desc',
         'fileUrls',
         'preview',
@@ -95,10 +104,43 @@ export default class GoodService {
       ],
       populate: ['user'],
     });
+    const concern = await this.concernRepository.findOne(
+      { user: reqUser.id, good: goodInfo.id },
+      { fields: ['enable'] },
+    );
+    return {
+      id: goodInfo.id,
+      ...goodInfo,
+      concerned: concern?.enable || false,
+    };
   }
 
-  async deleteOneGood(id: string) {
-    const good = await this.goodRepository.findOne(id);
+  async modifyOneGood(
+    reqUser: ReqUser,
+    goodId: string,
+    patchGoodsDto: PatchGoodsDto,
+  ) {
+    const good = await this.goodRepository.findOneOrFail(
+      { id: goodId, user: reqUser.id },
+      {
+        fields: ['id', 'user', 'user.id'],
+        populate: ['user'],
+      },
+    );
+    if (typeof patchGoodsDto.isOnShelf != 'boolean') {
+      Object.assign(patchGoodsDto, {
+        auditStatus: GoodAuditStatus.WAIT,
+      });
+    }
+    wrap(good).assign(patchGoodsDto);
+    return this.goodRepository.flush();
+  }
+
+  async deleteOneGood(reqUser: ReqUser, goodId: string) {
+    const good = await this.goodRepository.findOneOrFail(
+      { id: goodId, user: reqUser.id },
+      { fields: ['id', 'user', 'user.id'], populate: ['user'] },
+    );
     wrap(good).assign({ deletedAt: new Date() });
     return this.goodRepository.flush();
   }

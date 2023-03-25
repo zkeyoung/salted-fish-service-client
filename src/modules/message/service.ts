@@ -62,8 +62,7 @@ export default class MessageService {
     const msgs = await session.messages.matching({
       offset: (page - 1) * perPage,
       limit: perPage,
-      orderBy: { createdAt: QueryOrder.DESC },
-      fields: ['content', 'createdAt', 'sender', 'sender.id'],
+      fields: ['content', 'createdAt', 'sender', 'sender.id', 'readStatus'],
     });
     return msgs.map((msg) => {
       msg.content = this.cryptoService.aesDecodeString(
