@@ -4,11 +4,9 @@
 服务端基于nestjs构建的一个http+ws的混合应用。
 web端基于react + antd-mobile构建。
 
-C端web: [salted-fish-market](https://github.com/zkeyoung/salted-fish-market)
-
-M端服务端: [salted-fish-service-admin](https://github.com/zkeyoung/salted-fish-service-admin)
-
-M端web: [salted-fish-market-admin](https://github.com/zkeyoung/salted-fish-market-admin)
+* C端web: [salted-fish-market](https://github.com/zkeyoung/salted-fish-market)
+* M端服务端: [salted-fish-service-admin](https://github.com/zkeyoung/salted-fish-service-admin)
+* M端web: [salted-fish-market-admin](https://github.com/zkeyoung/salted-fish-market-admin)
 
 ## 功能
 1. 用户模块：登录、注册、个人信息修改等。
