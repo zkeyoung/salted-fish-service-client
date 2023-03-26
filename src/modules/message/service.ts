@@ -1,4 +1,3 @@
-import { QueryOrder } from '@mikro-orm/core';
 import { EntityRepository } from '@mikro-orm/mongodb';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { BadRequestException, Injectable } from '@nestjs/common';

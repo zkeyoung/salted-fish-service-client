@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigVariables } from '../../config';
 import { ReqUser } from '../../decorator/req-user';
 import CryptoService from '../crypto/service';
+import Message from '../orm/entities/message';
 import Session from '../orm/entities/session';
 import User from '../orm/entities/user';
 import CreateSessionDto from './dtos/create-sesstion';
@@ -20,6 +21,8 @@ export default class SessionService {
     private readonly sessionRepository: EntityRepository<Session>,
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
+    @InjectRepository(Message)
+    private readonly messageRepository: EntityRepository<Message>,
     private readonly configService: ConfigService<ConfigVariables>,
     private readonly cryptoService: CryptoService,
   ) {}
@@ -59,12 +62,25 @@ export default class SessionService {
         orderBy: { createdAt: QueryOrder.DESC },
       },
     );
-    return sessions.map((session) => {
+    const unreadAmounts = await Promise.all(
+      sessions.map((session) => {
+        const sender = session.users
+          .toArray()
+          .find((user) => user.id !== reqUser.id);
+        return this.messageRepository.count({
+          readStatus: false,
+          receiver: reqUser.id,
+          sender: sender.id,
+        });
+      }),
+    );
+    return sessions.map((session, idx) => {
       if (session.lastMessage) {
         session.lastMessage.content = this.cryptoService.aesDecodeString(
           session.lastMessage.content,
           this.userConfig.MESSAGE_SECRET,
         );
+        session.unreadAmount = unreadAmounts[idx] || 0;
       }
       return session;
     });

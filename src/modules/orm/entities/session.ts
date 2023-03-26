@@ -4,6 +4,7 @@ import {
   ManyToMany,
   OneToMany,
   OneToOne,
+  Property,
 } from '@mikro-orm/core';
 import BaseEntity from './base';
 import Message from './message';
@@ -21,6 +22,9 @@ export default class Session extends BaseEntity {
 
   @OneToOne({ nullable: true })
   lastMessage?: Message;
+
+  @Property({ nullable: true })
+  unreadAmount?: number;
 
   constructor(session: Partial<Session>) {
     super(session);
